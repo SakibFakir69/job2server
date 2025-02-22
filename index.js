@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion,ObjectId } = require("mongodb");
-const uri = "mongodb+srv://fakirsakib22232:nI3VAWDJIuwGLe4Y@cluster0.nmkfd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_PASSWORD}@cluster0.nmkfd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -28,6 +28,11 @@ async function run() {
     // Database and collection
     const taskDB = client.db("taskDB");
     const taskCollection = taskDB.collection("tasks");
+
+    const useCollection = taskDB.collection("users");
+
+
+
 
     // POST - Add Task
     app.post("/tasks", async (req, res) => {
@@ -84,6 +89,48 @@ async function run() {
         res.status(500).json({ error: "Internal Server Error" });
       }
     });
+
+    // delete 
+
+    app.delete('/tasks/:id', async(req,res)=>{
+
+      try{
+        const id = req.params.id;
+      const filter = {_id : new ObjectId(id)}
+
+      const result = await taskCollection.deleteOne( filter);
+      res.send(result);
+      }catch(error){
+        console.log(error.message)
+      }
+
+    })
+
+
+
+
+
+    
+
+    // store user 
+
+    app.post('/users', async(req,res)=>{
+      
+      const user = req.body;
+      
+      const email = user.email;
+
+      const dbEmail = await useCollection.findOne({email});
+
+      if(dbEmail)
+      {
+        return res.send("already exit");
+      }else{
+        const result = await useCollection.insertOne(user);
+        res.send(result);
+      }
+
+    })
 
 
 
