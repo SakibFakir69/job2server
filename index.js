@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion,ObjectId } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_PASSWORD}@cluster0.nmkfd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -40,7 +40,7 @@ async function run() {
         const user = req.body;
         const result = await taskCollection.insertOne(user);
         console.log(result);
-        
+
         console.log("Task added:", result);
         res.send(result);
       } catch (error) {
@@ -92,17 +92,51 @@ async function run() {
 
     // delete 
 
-    app.delete('/tasks/:id', async(req,res)=>{
+    app.delete('/tasks/:id', async (req, res) => {
 
-      try{
+      try {
         const id = req.params.id;
-      const filter = {_id : new ObjectId(id)}
+        const filter = { _id: new ObjectId(id) }
 
-      const result = await taskCollection.deleteOne( filter);
-      res.send(result);
-      }catch(error){
+        const result = await taskCollection.deleteOne(filter);
+        res.send(result);
+      } catch (error) {
         console.log(error.message)
       }
+
+    })
+
+    // update task
+
+    app.put('/update/tasks/:id', async (req, res) => {
+
+      try {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const user = req.body;
+
+        const updateTask = {
+          $set: {
+            title: user.title,
+            description: user.description,
+            category: user.category,
+
+          }
+
+
+        }
+
+        const result = await taskCollection
+        .updateOne( filter,user,updateTask);
+        res.send(result);
+
+
+
+      } catch (error) {
+        console.log("founed error on update ");
+
+      }
+
 
     })
 
@@ -110,22 +144,21 @@ async function run() {
 
 
 
-    
+
 
     // store user 
 
-    app.post('/users', async(req,res)=>{
-      
+    app.post('/users', async (req, res) => {
+
       const user = req.body;
-      
+
       const email = user.email;
 
-      const dbEmail = await useCollection.findOne({email});
+      const dbEmail = await useCollection.findOne({ email });
 
-      if(dbEmail)
-      {
+      if (dbEmail) {
         return res.send("already exit");
-      }else{
+      } else {
         const result = await useCollection.insertOne(user);
         res.send(result);
       }
